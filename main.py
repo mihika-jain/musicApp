@@ -1,6 +1,8 @@
 import requests
 import json
 import urllib
+from database import *
+from datetime import datetime
 
 # base URL of all Spotify API endpoints
 BASE_URL = 'https://api.spotify.com/v1/'
@@ -40,7 +42,7 @@ def get_track(track_id):
 
 # ----------------------------------------------------------------------
 
-def get_playlist(playlist_id):
+def get_playlist_tracks(playlist_id):
     access_token = get_access_token()
     headers = {
         'Authorization': 'Bearer {token}'.format(token=access_token)
@@ -48,16 +50,30 @@ def get_playlist(playlist_id):
 
     r = requests.get(BASE_URL + 'playlists/' + playlist_id + '/tracks', headers=headers)
 
-    return r.json()
+    json_data = r.json()
+
+    # write JSON data to file
+    with open('playlist_data.json', 'w') as out_file:
+        json.dump(json_data, out_file, ensure_ascii=False)
 
 
-def get_tracks_from_playlist(playlist_id):
-    playlist = get_playlist(playlist_id)
+# ----------------------------------------------------------------------
 
-    
+def playlist_tracks_to_dict(file_name):
+    # convert file to dictionary
+    with open(file_name) as in_file:
+        playlist_dict = json.load(in_file)
+
+    # loop thru dictionary get track IDs and store track data into DB
+    for track in playlist_dict:
+        track_id = playlist_dict[track][id]
+        track_info = get_track(track_id)
+        database.insert_item(datetime.today().strftime('%Y-%m-%d'), track_info)
 
 
 # --- test here --- 
 FLOWERS_ID = '0yLdNVWF3Srea0uzk55zFn'
 BILLBOARD_ID = '6UeSakyzhiEt4NB3UAd6NQ'
-print(get_playlist(BILLBOARD_ID))
+# print(get_playlist_tracks(BILLBOARD_ID))
+
+playlist_tracks_to_dict('playlist_data.json')
