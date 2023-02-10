@@ -1,7 +1,8 @@
 import requests
+import pprint
 import json
 import urllib
-from database import *
+import database
 from datetime import datetime
 
 # base URL of all Spotify API endpoints
@@ -59,16 +60,19 @@ def get_playlist_tracks(playlist_id):
 
 # ----------------------------------------------------------------------
 
-def playlist_tracks_to_dict(file_name):
+def playlist_tracks_to_database(file_name):
     # convert file to dictionary
     with open(file_name) as in_file:
         playlist_dict = json.load(in_file)
 
+    # pprint.pprint(playlist_dict)
     # loop thru dictionary get track IDs and store track data into DB
-    for track in playlist_dict:
-        track_id = playlist_dict[track][id]
+    for track in playlist_dict['items']:
+        # pprint.pprint(track)
+        track_id = track['track']['id']
         track_info = get_track(track_id)
-        database.insert_item(datetime.today().strftime('%Y-%m-%d'), track_info)
+        # print(track_info)
+        database.insert_item(track_info)
 
 
 # --- test here --- 
@@ -76,4 +80,4 @@ FLOWERS_ID = '0yLdNVWF3Srea0uzk55zFn'
 BILLBOARD_ID = '6UeSakyzhiEt4NB3UAd6NQ'
 # print(get_playlist_tracks(BILLBOARD_ID))
 
-playlist_tracks_to_dict('playlist_data.json')
+# playlist_tracks_to_dict('playlist_data.json')
