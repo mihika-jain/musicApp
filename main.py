@@ -2,42 +2,62 @@ import requests
 import json
 import urllib
 
-SPOTIFY_BASE_URI = 'https://api.spotify.com/v1'
+# base URL of all Spotify API endpoints
+BASE_URL = 'https://api.spotify.com/v1/'
+
 CLIENT_ID = 'REDACTED_SPOTIFY_CLIENT_ID'
+CLIENT_SECRET = 'REDACTED_SPOTIFY_CLIENT_SECRET'
 
-def get_access_code():
-    REDIRECT_URI = 'http://localhost:8888/callback'
-    response = requests.get(
-        'https://accounts.spotify.com/authorize',
-        params = {
-            'client_id': urllib.parse.quote(CLIENT_ID.encode("utf-8")),
-            'response_type': 'token',
-            'redirect_uri': urllib.parse.quote(REDIRECT_URI.encode("utf-8"))
-        }
-    )
-    # str_enc.decode('utf8', 'strict')
-    # response_text = response.text.decode('utf8', 'strict')
+# ----------------------------------------------------------------------
 
-    # json_data = json.loads(response_text)
-    return response.text
+def get_access_token():
+    AUTH_URL = 'https://accounts.spotify.com/api/token'
 
-# https://developer.spotify.com/documentation/web-api/reference/#/operations/get-track
-# https://developer.spotify.com/console/get-track/ 
-# GET /tracks/{id}
-# def get_track(track_id):
-#     response = requests.get(
-#         SPOTIFY_BASE_URI + f'/tracks/{track_id}',
-#         headers = {
-#             "Authorization": f"Bearer {ACCESS_TOKEN}",
-#             "market": "GB"
-#         }
-#     }
-#     json_resp = response.json()
-#     return json_resp
+    # POST
+    auth_response = requests.post(AUTH_URL, {
+        'grant_type': 'client_credentials',
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+    })
+
+    # convert the response to JSON
+    auth_response_data = auth_response.json()
+
+    # save the access token
+    return auth_response_data['access_token']
+
+# ----------------------------------------------------------------------
+
+def get_track(track_id):
+    access_token = get_access_token()
+    headers = {
+        'Authorization': 'Bearer {token}'.format(token=access_token)
+    }
+
+    r = requests.get(BASE_URL + 'audio-features/' + track_id, headers=headers)
+
+    return r.json()
+
+# ----------------------------------------------------------------------
+
+def get_playlist(playlist_id):
+    access_token = get_access_token()
+    headers = {
+        'Authorization': 'Bearer {token}'.format(token=access_token)
+    }
+
+    r = requests.get(BASE_URL + 'playlists/' + playlist_id + '/tracks', headers=headers)
+
+    return r.json()
+
+
+def get_tracks_from_playlist(playlist_id):
+    playlist = get_playlist(playlist_id)
+
+    
+
 
 # --- test here --- 
-
-# FLOWERS_ID = '0yLdNVWF3Srea0uzk55zFn'
-# print(get_track(FLOWERS_ID))
-
-print(get_access_code())
+FLOWERS_ID = '0yLdNVWF3Srea0uzk55zFn'
+BILLBOARD_ID = '6UeSakyzhiEt4NB3UAd6NQ'
+print(get_playlist(BILLBOARD_ID))
