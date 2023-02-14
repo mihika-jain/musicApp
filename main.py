@@ -4,6 +4,7 @@ import json
 import urllib
 import database
 from datetime import datetime
+from database import *
 
 # base URL of all Spotify API endpoints
 BASE_URL = 'https://api.spotify.com/v1/'
@@ -67,13 +68,16 @@ def playlist_tracks_to_database(file_name):
 
     # pprint.pprint(playlist_dict)
     # loop thru dictionary get track IDs and store track data into DB
+    count = 1.0
     for track in playlist_dict['items']:
         # pprint.pprint(track)
         track_id = track['track']['id']
         track_info = get_track(track_id)
         # print(track_info)
-        database.insert_item(track_info)
+        database.insert_track(track_info, count)
+        count += 1
 
+# ----------------------------------------------------------------------
 
 # --- test here --- 
 FLOWERS_ID = '0yLdNVWF3Srea0uzk55zFn'
@@ -81,3 +85,5 @@ BILLBOARD_ID = '6UeSakyzhiEt4NB3UAd6NQ'
 # print(get_playlist_tracks(BILLBOARD_ID))
 
 # playlist_tracks_to_dict('playlist_data.json')
+
+playlist_tracks_to_database('playlist_data.json')
