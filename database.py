@@ -18,12 +18,20 @@ def get_database():
 # ----------------------------------------------------------------------
 
 def insert_track(track, count):
+    '''
+        inserts the track (dict) into the MongoDB database
+        count is 
+    '''
     global avg_dance
     global avg_ener
 
     db = get_database()
     # maybe if we're getting date automatically need a parse
     collection = db['top100']
+
+    # set new parameters
+    track['update'] = 0     # initialize to 0 (false)
+    track['place'] = count  # initialize to count
 
     # calculate weighted averages
     avg_dance += track['danceability'] * (100-count)
@@ -44,8 +52,30 @@ def delete_whole_collection():
 
 # ----------------------------------------------------------------------
 
-# def calculate_averages(track, count):
+def update_many(collection):
+    '''
+        given a collection, calls the update_many() API function
+        ** maybe rename this to reduce confusion
+    '''
+    collection.update_many({}, {'$set': {'update': 0}})
 
+def delete_not_updated(collection):
+    '''
+        delete all tracks from collection tthat haven't been updated
+    '''
+    collection.delete_many({'update': 0})
+
+def contains(collection, track_id):
+    ''' 
+        return true if the collection contains the track ID
+    '''
+    return collection.find_one({'id': track_id})
+
+def find_one_and_update(collection, track_id):
+    ''' 
+        return true if the collection contains the track ID
+    '''
+    return collection.find_one_and_update({'id': track_id}, )
 
 # ----------------------------------------------------------------------
 
@@ -58,6 +88,6 @@ def delete_whole_collection():
 # ----------------------------------------------------------------------
 # testing
 
-print(avg_dance)
-print(avg_ener)
-# delete_whole_collection()
+db = get_database()
+collection = db['top100']
+# print(contains(collection, "02Zkkf2zMkwRGQjZ7T4p8f"))
