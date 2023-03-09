@@ -52,7 +52,7 @@ def get_track(track_id):
 
 # ----------------------------------------------------------------------
 
-def playlist_tracks_to_file(playlist_id):
+def playlist_tracks_to_file(playlist_id, file_name):
     '''
         Given playlist id (str), accesses Spotify database and
         writes playlist info (dict) to playlist_data.json 
@@ -67,7 +67,7 @@ def playlist_tracks_to_file(playlist_id):
 
     # write JSON data to file
     json_data = r.json()
-    with open('playlist_data.json', 'w') as out_file:
+    with open(file_name, 'w') as out_file:
         json.dump(json_data, out_file, ensure_ascii=False)
 
 
@@ -79,12 +79,13 @@ def update_collection(playlist_id, file_name):
         update the collection database to be accurate to the current playlist
         
     '''
+
+    # update playlist json file
+    playlist_tracks_to_file(playlist_id, 'playlist_data.json')
+
     # convert file to dictionary
     with open(file_name) as in_file:
         playlist_dict = json.load(in_file)
-
-    # update playlist json file
-    playlist_tracks_to_file(playlist_id)
 
     # for all current documents in the database, set update parameter to 0
     db = database.get_database()
@@ -98,19 +99,21 @@ def update_collection(playlist_id, file_name):
         track_id = track['track']['id']
         if(database.contains(collection, track_id)!= None):
             # update place to count make update 1
-            datebase.find_one_and_update(collection,track_id, count)
+            database.find_one_and_update(collection, track_id, count)
         else:
             track_info = get_track(track_id)
-            track_info['update'] = 1
-            track_info['place'] = count
-            database.insert_track(track_info, count)
+            database.insert_track(collection, track_info, count)
         count+=1
     
     # iterate back through collection and remove all items that haven't been updated 
     database.delete_not_updated(collection)
-    
 
-# --- test here --- 
+# ----------------------------------------------------------------------
+
+
+    
+# ----------------------------------------------------------------------
+
 FLOWERS_ID = '0yLdNVWF3Srea0uzk55zFn'
 BILLBOARD_ID = '6UeSakyzhiEt4NB3UAd6NQ'
 NEWPLAY_ID = '6dwkKfocksoZ6gtQYOTC2e'

@@ -17,51 +17,44 @@ def get_database():
 
 # ----------------------------------------------------------------------
 
-def insert_track(track, count):
+def insert_track(collection, track, count):
     '''
         inserts the track (dict) into the MongoDB database
         count is 
     '''
-    global avg_dance
-    global avg_ener
-
-    db = get_database()
-    # maybe if we're getting date automatically need a parse
-    collection = db['top100']
 
     # set new parameters
-    track['update'] = 0     # initialize to 0 (false)
-    track['place'] = count  # initialize to count
-
-    # calculate weighted averages
-    avg_dance += track['danceability'] * (100-count)
-    avg_ener += track['energy'] * (100-count)
+    track['update'] = 1
+    track['place'] = count
+    track['time'] = 1
+    track['total_pos'] = count
     
     collection.insert_one(track)
 
 # ----------------------------------------------------------------------
 
-def delete_track(track):
-    db = get_database()
-    collection = db['top100']
+def delete_track(collection, track):
     collection.delete_one(track)
 
-def delete_whole_collection():
-    db = get_database()
-    db['top100'].drop()
+def delete_whole_collection(collection):
+    collection.drop()
 
 # ----------------------------------------------------------------------
 
 def update_many(collection):
     '''
         given a collection, calls the update_many() API function
-        ** maybe rename this to reduce confusion
+        Updates the update parameter 
+        *maybe rename to avoid confusion
     '''
-    collection.update_many({}, {'$set': {'update': 0}})
+    collection.update_many(
+        {}, 
+        {'$set': {'update': 0}},
+    )
 
 def delete_not_updated(collection):
     '''
-        delete all tracks from collection tthat haven't been updated
+        delete all tracks from collection that haven't been updated
     '''
     collection.delete_many({'update': 0})
 
@@ -71,11 +64,19 @@ def contains(collection, track_id):
     '''
     return collection.find_one({'id': track_id})
 
-def find_one_and_update(collection, track_id):
+def find_one_and_update(collection, track_id, count):
     ''' 
-        return true if the collection contains the track ID
+        use collection find nad update for track (updating place, etc.)
     '''
-    return collection.find_one_and_update({'id': track_id}, )
+    collection.find_one_and_update(
+        {'id': track_id}, 
+        {'$set': {'place': count, 'update': 1}},
+    )
+
+    collection.find_one_and_update(
+        {'id': track_id}, 
+        {'$inc': {'time': 1, 'total_pos': count}},
+    )
 
 # ----------------------------------------------------------------------
 
@@ -88,6 +89,6 @@ def find_one_and_update(collection, track_id):
 # ----------------------------------------------------------------------
 # testing
 
-db = get_database()
-collection = db['top100']
+# db = get_database()
+# collection = db['top100']
 # print(contains(collection, "02Zkkf2zMkwRGQjZ7T4p8f"))
