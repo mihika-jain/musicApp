@@ -1,3 +1,4 @@
+import os
 import requests
 import pprint
 import json
@@ -9,8 +10,9 @@ from database import *
 # base URL of all Spotify API endpoints
 BASE_URL = 'https://api.spotify.com/v1/'
 
-CLIENT_ID = 'REDACTED_SPOTIFY_CLIENT_ID'
-CLIENT_SECRET = 'REDACTED_SPOTIFY_CLIENT_SECRET'
+# Spotify API credentials are read from environment variables (see .env.example)
+CLIENT_ID = os.environ['SPOTIFY_CLIENT_ID']
+CLIENT_SECRET = os.environ['SPOTIFY_CLIENT_SECRET']
 
 # ----------------------------------------------------------------------
 
